@@ -5,14 +5,7 @@ Vue.component('paginatrix', {
             default: function() {
                 return {
                     current_page: 1,
-                    data: [],
-                    from: 1,
                     last_page: 1,
-                    next_page_url: null,
-                    per_page: 10,
-                    prev_page_url: null,
-                    to: 1,
-                    total: 0,
                 };
             },
         },
@@ -20,6 +13,12 @@ Vue.component('paginatrix', {
             type: Number,
             default: 10,
         },
+        ulPaginationClasses: {
+            type: Array,
+            default: function() {
+                return ['pagination'];
+            }
+        }
     },
     data: function () {
         return {
@@ -29,21 +28,27 @@ Vue.component('paginatrix', {
     },
     template:
     `<nav aria-label="Page navigation">
-        <ul class="pagination">
+        <ul :class="ulPaginationClasses">
             <li>
-                <a role="button" class="page-link" aria-label="Previous"
-                    @click.prevent="selectPage(prev_page)">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
+                <slot name="prev-link">
+                    <a role="button" class="page-link no-user-selection" aria-label="Previous"
+                        @click.prevent="selectPage(prev_page)">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </slot>
             </li>
-            <li v-for="n in getPages()" :class="{ 'active': n == data.current_page }">
-                <a role="button" class="page-link" @click.prevent="selectPage(n)">{{ n }}</a>
+            <li v-for="n in getPages()">
+                <slot name="number-link" :pageNum="n">
+                    <a role="button" class="page-link no-user-selection" @click.prevent="selectPage(n)">{{ n }}</a>
+                </slot>
             </li>
             <li>
-                <a role="button" class="page-link" aria-label="Next"
-                    @click.prevent="selectPage(next_page)">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
+                <slot name="next-link">
+                    <a role="button" class="page-link no-user-selection" aria-label="Next"
+                        @click.prevent="selectPage(next_page)" style="user-select: none;">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </slot>
             </li>
         </ul>
     </nav>`,
@@ -55,34 +60,39 @@ Vue.component('paginatrix', {
             }
         },
         getPages: function() {
-            if (this.limit === -1) {
+            if (this.limit < 0) {
                 return 0;
-            }
-
-            if (this.limit === 0) {
+            } else if (this.limit === 0) {
                 return this.data.last_page;
             }
 
+            // The number of pages that there should be before the current page
             var med = Math.floor((this.limit - 1) / 2);
              
             if(this.data.last_page - this.data.current_page <= med) {
-                med = this.limit - (this.data.last_page - this.data.current_page) -1;
+                // In case there needs to be more pages before the current page to fill the limit
+                med = this.limit - (this.data.last_page - this.data.current_page) - 1;
             }
-            var pag = 0;
 
-            var start = this.data.current_page - this.limit,
-                end   = this.data.current_page + this.limit + 1,
-                pages = [],
-                index = this.data.current_page - med <= 0 ? 1 : this.data.current_page - med;
+            var pag = 0,
+                pages = [];
 
-            for(var i = index; i < this.data.current_page; i++) {
+            // The first page number that should be shown.
+            // If there actually aren't ${med} pages before the current page:
+            // start showing page links from "1"
+            var pagNum = this.data.current_page - med <= 0 ? 1 : this.data.current_page - med;
+
+            for(var i = pagNum; i < this.data.current_page; i++) {
                 pages.push(i);
-                pag ++;
+                pag++;
             }
             pages.push(this.data.current_page);
+            // Add the page links that go after the current page.
+            // Also makes sure that no page link after the last page is shown.
             for(var i = 1; i < this.limit - pag && this.data.current_page + i <= this.data.last_page; i++) {
                 pages.push(this.data.current_page + i);
             }
+            // Reassign the values for the previous page and the next page
             this.prev_page =
                 this.data.current_page <= 1 ? 1 : this.data.current_page - 1;
             this.next_page =
