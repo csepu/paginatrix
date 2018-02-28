@@ -1,3 +1,14 @@
+/*
+    ____              _             __       _          _     
+   / __ \____ _____ _(_)___  ____ _/ /______(_)  __    (_)____
+  / /_/ / __ `/ __ `/ / __ \/ __ `/ __/ ___/ / |/_/   / / ___/
+ / ____/ /_/ / /_/ / / / / / /_/ / /_/ /  / />  <_   / (__  ) 
+/_/    \__,_/\__, /_/_/ /_/\__,_/\__/_/  /_/_/|_(_)_/ /____/  
+            /____/                               /___/        
+
+Authors: Cesar Sepulveda, Carlos Sifuentes
+Version: 1.1.1
+*/
 Vue.component('paginatrix', {
     props: {
         data: {
@@ -23,35 +34,35 @@ Vue.component('paginatrix', {
     data: function () {
         return {
             next_page: 1,
-            prev_page: 1,
+            prev_page: 1
         };
     },
     template:
-    `<nav aria-label="Page navigation">
-        <ul :class="ulPaginationClasses">
+    `<ul :class="ulPaginationClasses">
+        <slot name="prev-link">
             <li>
-                <slot name="prev-link">
-                    <a role="button" class="page-link no-user-selection" aria-label="Previous"
-                        @click.prevent="selectPage(prev_page)">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </slot>
+                <a role="button" class="page-link no-user-selection" aria-label="Previous"
+                    @click.prevent="selectPage(prev_page)">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
             </li>
-            <li v-for="n in getPages()">
-                <slot name="number-link" :pageNum="n">
+        </slot>
+        <template v-for="n in getPages()">
+            <slot name="number-link" :pageNum="n">
+            	<li>
                     <a role="button" class="page-link no-user-selection" @click.prevent="selectPage(n)">{{ n }}</a>
-                </slot>
-            </li>
+				</li>
+            </slot>
+        </template>
+        <slot name="next-link">
             <li>
-                <slot name="next-link">
-                    <a role="button" class="page-link no-user-selection" aria-label="Next"
-                        @click.prevent="selectPage(next_page)" style="user-select: none;">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </slot>
+                <a role="button" class="page-link no-user-selection" aria-label="Next"
+                    @click.prevent="selectPage(next_page)" style="user-select: none;">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
             </li>
-        </ul>
-    </nav>`,
+        </slot>
+    </ul>`,
 
     methods: {
         selectPage: function(page) {
